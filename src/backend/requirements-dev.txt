@@ -1,0 +1,16 @@
+# Dependencias para desarrollar y probar el backend.
+# Render no usa este archivo: en producción solo se instala requirements.txt
+# (ver buildCommand en render.yaml), así que nada de lo que hay aquí llega al servidor.
+# Instalación, desde src/backend: pip install -r requirements-dev.txt
+-r requirements.txt
+
+# Pruebas
+pytest==9.2.0
+pytest-cov==7.1.0
+# El TestClient de FastAPI y las pruebas de concurrencia usan httpx; la app no lo importa.
+httpx==0.28.1
+# Permite que las pruebas lean el .env de la raíz.
+python-dotenv==1.2.4
+
+# Calidad de código (reglas en ruff.toml)
+ruff==0.17.5

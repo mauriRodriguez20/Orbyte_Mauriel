@@ -7,5 +7,3 @@ psycopg[binary]==3.3.6
 pyjwt
 argon2-cffi
 email-validator
-pytest
-httpx
