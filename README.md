@@ -122,7 +122,7 @@ CREATE DATABASE orbyte_test OWNER orbyte_dev;
 
 1. Copia `.env.example` como `.env` en la raíz del repositorio y completa:
    - `DATABASE_URL=postgresql://orbyte_dev:una-clave-de-desarrollo@localhost:5432/orbyte`
-   - `TEST_DATABASE_URL`, igual pero terminando en `/orbyte_test`. Es opcional: sin ella se omiten las pruebas de integración.
+   - `TEST_DATABASE_URL`, igual pero terminando en `/orbyte_test`. Es opcional: sin ella se omiten las pruebas de integración. **Nunca debe apuntar a Render ni a una base con datos reales** (ver [Pruebas y calidad del backend](#pruebas-y-calidad-del-backend)).
    - `JWT_SECRET`, con el valor que imprima `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
 2. El archivo `.env` está en `.gitignore` y nunca se sube al repositorio.
 3. En producción las variables se configuran solo en los paneles de Render (backend, ver [Despliegue del backend](#despliegue-del-backend-en-render)) y Vercel (frontend: `VITE_API_URL`).
@@ -134,18 +134,29 @@ CREATE DATABASE orbyte_test OWNER orbyte_dev;
 cd src/backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1   # Windows (PowerShell). En macOS o Linux: source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # la app más las herramientas de pruebas y calidad
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
 La API queda en `http://localhost:8000`, `GET /health` responde `{"status": "ok"}` y la documentación interactiva está en `http://localhost:8000/docs`.
 
-Para correr las pruebas, desde `src/backend` y con el entorno virtual activo:
+#### Pruebas y calidad del backend
+
+`requirements-dev.txt` instala lo mismo que `requirements.txt` más pytest, pytest-cov, httpx, python-dotenv y Ruff. Render solo instala `requirements.txt`, así que esas herramientas no llegan a producción.
+
+Desde `src/backend` y con el entorno virtual activo:
 
 ```powershell
-python -m pytest -v
+python -m pytest -v -rs                                   # -rs muestra el motivo de cada prueba omitida
+python -m pytest --cov=app --cov-report=term-missing -q   # lo mismo, con cobertura
+ruff check app tests                                      # las reglas están en ruff.toml
 ```
+
+- `TEST_DATABASE_URL` se lee del `.env` de la raíz: no hace falta exportarla. Si además está exportada en la terminal, manda la exportada.
+- Sin `TEST_DATABASE_URL`, las pruebas que no necesitan base se ejecutan igual y terminan en segundos; las de integración se omiten indicando el motivo.
+- Las migraciones se aplican una sola vez por sesión, y todas las tablas se vacían con `TRUNCATE` antes de la primera prueba y después de cada una.
+- **`TEST_DATABASE_URL` nunca debe apuntar a Render ni a una base con datos reales**, porque las pruebas borran todo su contenido. Como protección, pytest se niega a ejecutarse si es la misma base que `DATABASE_URL`, si el servidor es de Render o si el nombre de la base no termina en `_test`.
 
 ### Frontend
 
@@ -510,7 +521,7 @@ $env:SEED_PASSWORD = "<clave-de-desarrollo>"
 python -m scripts.seed_dev_usuarios
 ```
 
-Los tests que necesitan PostgreSQL se ejecutan únicamente si se define `TEST_DATABASE_URL` (por ejemplo, en `.env`); si no está definida, pytest los marca como omitidos. SQLite no es compatible con el esquema PostgreSQL.
+Las pruebas que necesitan PostgreSQL se ejecutan únicamente si se define `TEST_DATABASE_URL` en el `.env` de la raíz; si no está definida, pytest las marca como omitidas (ver [Pruebas y calidad del backend](#pruebas-y-calidad-del-backend)). SQLite no es compatible con el esquema PostgreSQL.
 
 ### Datos del Demo
 
