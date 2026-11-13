@@ -153,6 +153,10 @@ def test_migracion_asignacion_atomica_es_reversible(real_db):
     backend_dir = Path(__file__).resolve().parents[1]
     env = os.environ.copy()
     env["DATABASE_URL"] = database_url
+    # Las migraciones se aplican una sola vez por sesión: esta prueba tiene que devolver la
+    # base a la revisión en la que la encontró, o las pruebas siguientes fallarían.
+    revision_inicial = real_db.scalar(text("SELECT version_num FROM alembic_version"))
+    real_db.rollback()
 
     subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "0002"],
@@ -177,3 +181,4 @@ def test_migracion_asignacion_atomica_es_reversible(real_db):
             env=env,
             check=True,
         )
+    assert real_db.scalar(text("SELECT version_num FROM alembic_version")) == revision_inicial

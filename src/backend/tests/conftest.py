@@ -50,8 +50,13 @@ def arranque_sin_base():
         yield
 
 
-@pytest.fixture
-def real_db():
+@pytest.fixture(scope="session")
+def base_migrada():
+    """Aplica las migraciones una sola vez por sesión y devuelve la URL de la base de pruebas.
+
+    Antes cada prueba lanzaba `alembic upgrade head` en un proceso aparte: más de un segundo
+    por prueba aunque la base ya estuviera al día.
+    """
     database_url = os.getenv("TEST_DATABASE_URL")
     if not database_url:
         pytest.skip(
@@ -68,7 +73,13 @@ def real_db():
         env=env,
         check=True,
     )
-    engine = create_engine(database_url, pool_pre_ping=True)
+    return database_url
+
+
+@pytest.fixture
+def real_db(base_migrada):
+    # El motor sigue siendo uno por prueba: ninguna conexión abierta pasa a la siguiente.
+    engine = create_engine(base_migrada, pool_pre_ping=True)
     with Session(engine) as db:
         yield db
         # historial_estados es de solo inserción (#35): no admite DELETE, se limpia con TRUNCATE.
