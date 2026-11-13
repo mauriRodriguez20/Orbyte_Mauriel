@@ -27,6 +27,29 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 
+@pytest.fixture(scope="session", autouse=True)
+def arranque_sin_base():
+    """Sin base de pruebas, la app no busca PostgreSQL al arrancar dentro de las pruebas.
+
+    Cada `with TestClient(app)` dispara el arranque de app/main.py, que aplica las migraciones
+    y crea el administrador inicial. Sin PostgreSQL, cada intento de conexión tarda varios
+    segundos y la suite parecía colgada, aunque esas pruebas usan sesiones falsas y no
+    necesitan ninguna base. Aquí se desactivan solo esos dos pasos, solo dentro de las pruebas
+    y solo cuando no hay TEST_DATABASE_URL. El arranque de producción no cambia: su doble
+    migración (DEF-11) sigue pendiente y no se toca aquí.
+    """
+    if os.getenv("TEST_DATABASE_URL"):
+        yield
+        return
+
+    from app import main as arranque_app
+
+    with pytest.MonkeyPatch.context() as parche:
+        parche.setattr(arranque_app, "_run_database_migrations", lambda: None)
+        parche.setattr(arranque_app, "ensure_seed_admin", lambda _db: None)
+        yield
+
+
 @pytest.fixture
 def real_db():
     database_url = os.getenv("TEST_DATABASE_URL")
