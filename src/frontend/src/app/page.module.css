@@ -113,17 +113,42 @@
 }
 
 .heroSection {
+  position: relative;
+  overflow: hidden;
   width: min(1200px, calc(100% - 32px));
-  margin: 28px auto 0;
-  padding: 48px 0 16px;
+  margin: 20px auto 0;
+  padding: 56px 48px 38px;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 40px;
   align-items: center;
+  border: 1px solid rgba(21, 73, 54, 0.1);
+  border-radius: 38px;
+  background:
+    radial-gradient(ellipse at 83% 18%, rgba(180, 218, 133, 0.34), transparent 34%),
+    radial-gradient(ellipse at 4% 100%, rgba(113, 190, 154, 0.17), transparent 42%),
+    linear-gradient(125deg, #fffefa 0%, #f4f8ef 54%, #e9f4e8 100%);
+  box-shadow: 0 24px 70px rgba(30, 69, 48, 0.08);
+}
+
+.heroSection::after {
+  content: "";
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  right: -180px;
+  bottom: -245px;
+  border: 1px solid rgba(32, 108, 75, 0.12);
+  border-radius: 50%;
+  box-shadow: 0 0 0 28px rgba(32, 108, 75, 0.035), 0 0 0 58px rgba(32, 108, 75, 0.025);
+  pointer-events: none;
 }
 
 .heroCopy {
+  position: relative;
+  z-index: 1;
   padding: 20px 0;
+  animation: reveal-copy 650ms ease both;
 }
 
 .eyebrow,
@@ -203,6 +228,7 @@
   display: grid;
   place-items: center;
   isolation: isolate;
+  animation: reveal-visual 800ms 120ms ease both;
 }
 
 .heroVisual::before {
@@ -223,6 +249,7 @@
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
   box-shadow: 0 28px 60px rgba(25, 55, 47, 0.14);
+  animation: card-float 7s ease-in-out infinite;
 }
 
 .visualBadge {
@@ -279,6 +306,7 @@
   right: 14px;
   flex-direction: column;
   align-items: flex-start;
+  animation: card-float 6s 250ms ease-in-out infinite;
 }
 
 .floatingCardUpper span {
@@ -294,6 +322,7 @@
   left: 10px;
   bottom: 50px;
   max-width: 220px;
+  animation: card-float 6.5s 600ms ease-in-out infinite;
 }
 
 .spark {
@@ -453,12 +482,42 @@
   text-decoration: none;
 }
 
+@keyframes reveal-copy {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes reveal-visual {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroCopy,
+  .heroVisual,
+  .cardMain,
+  .floatingCardUpper,
+  .floatingCardLower {
+    animation: none;
+  }
+}
+
 @media (max-width: 900px) {
   .navbar,
   .heroSection,
   .storySection {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .heroSection {
+    padding: 36px 30px 22px;
+    border-radius: 30px;
   }
 
   .navbar {
@@ -510,6 +569,11 @@
   .storySection,
   .footer {
     width: min(100% - 20px, 1200px);
+  }
+
+  .heroSection {
+    padding: 24px 18px 16px;
+    border-radius: 24px;
   }
 
   .shortStats {
