@@ -1,6 +1,6 @@
 # Red de Rescate de Alimentos
 
-Equipo: Orbyte
+Proyecto PERSONAL
 Alternativa seleccionada: aplicación web responsiva con panel administrativo.
 
 ## Qué hace
