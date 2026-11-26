@@ -1,3 +1,5 @@
+import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from uuid import uuid4
@@ -199,15 +201,15 @@ def test_ruta_sin_token_devuelve_401(client):
     [
         lambda: "not-a-token",
         lambda: create_access_token(sub=str(uuid4()), rol="fundacion")[:-1] + "x",
-        lambda: jwt.encode({"sub": str(uuid4())}, "test-secret-that-is-long-enough-for-tests", algorithm=ALGORITHM),
+        lambda: jwt.encode({"sub": str(uuid4())}, os.environ["JWT_SECRET"], algorithm=ALGORITHM),
         lambda: jwt.encode(
             {"sub": str(uuid4()), "rol": "fundacion", "exp": datetime.now(timezone.utc) - timedelta(minutes=1)},
-            "test-secret-that-is-long-enough-for-tests",
+            os.environ["JWT_SECRET"],
             algorithm=ALGORITHM,
         ),
         lambda: jwt.encode(
             {"sub": str(uuid4()), "rol": "fundacion", "exp": datetime.now(timezone.utc) + timedelta(minutes=5)},
-            "another-secret",
+            secrets.token_urlsafe(48),
             algorithm=ALGORITHM,
         ),
         lambda: create_access_token(sub="not-a-uuid", rol="fundacion"),

@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
@@ -18,11 +19,10 @@ from app.models import (
 )
 from app.security import create_access_token, hash_password, verify_password
 
-
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 admin_router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 fundacion_router = APIRouter(prefix="/api/v1/fundacion", tags=["fundacion"])
-_DUMMY_HASH = hash_password("dummy-password")
+_DUMMY_HASH = hash_password(secrets.token_urlsafe(32))
 
 
 class LoginIn(BaseModel):

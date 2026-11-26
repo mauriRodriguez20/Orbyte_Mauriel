@@ -1,9 +1,11 @@
 """Protecciones que solo aplican con ENTORNO=produccion (#28)."""
+import os
+import secrets
 from types import SimpleNamespace
 
 import pytest
 
-from app.config import CONTRASENA_ADMIN_DESARROLLO, Settings
+from app.config import Settings
 from app.services import bootstrap
 
 
@@ -21,11 +23,11 @@ class FakeSession:
         pass
 
 
-def _crear_admin(monkeypatch, entorno, contrasena):
+def _crear_admin(monkeypatch, entorno):
     ajustes = SimpleNamespace(
         es_produccion=entorno == "produccion",
-        default_admin_email="admin@example.com",
-        default_admin_password=contrasena,
+        default_admin_email=os.environ.get("DEFAULT_ADMIN_EMAIL", ""),
+        default_admin_password=os.environ.get("DEFAULT_ADMIN_PASSWORD", ""),
     )
     monkeypatch.setattr(bootstrap, "get_settings", lambda: ajustes)
     db = FakeSession()
@@ -33,17 +35,23 @@ def _crear_admin(monkeypatch, entorno, contrasena):
     return db.agregados
 
 
-@pytest.mark.parametrize("contrasena", [CONTRASENA_ADMIN_DESARROLLO, "", "   "])
-def test_produccion_no_crea_admin_con_contrasena_insegura(monkeypatch, contrasena):
-    assert _crear_admin(monkeypatch, "produccion", contrasena) == []
+@pytest.mark.parametrize("contrasena", ["", "   ", "corta"])
+def test_produccion_rechaza_clave_vacia_o_demasiado_corta(monkeypatch, contrasena):
+    monkeypatch.setenv("DEFAULT_ADMIN_EMAIL", "admin@example.com")
+    monkeypatch.setenv("DEFAULT_ADMIN_PASSWORD", contrasena)
+    assert _crear_admin(monkeypatch, "produccion") == []
 
 
 def test_produccion_crea_admin_con_contrasena_propia(monkeypatch):
-    assert len(_crear_admin(monkeypatch, "produccion", "una-clave-propia-y-larga")) == 1
+    monkeypatch.setenv("DEFAULT_ADMIN_EMAIL", "admin@example.com")
+    monkeypatch.setenv("DEFAULT_ADMIN_PASSWORD", secrets.token_urlsafe(32))
+    assert len(_crear_admin(monkeypatch, "produccion")) == 1
 
 
-def test_desarrollo_conserva_el_admin_por_defecto(monkeypatch):
-    assert len(_crear_admin(monkeypatch, "desarrollo", CONTRASENA_ADMIN_DESARROLLO)) == 1
+def test_desarrollo_crea_admin_con_credenciales_configuradas(monkeypatch):
+    monkeypatch.setenv("DEFAULT_ADMIN_EMAIL", "admin@example.com")
+    monkeypatch.setenv("DEFAULT_ADMIN_PASSWORD", secrets.token_urlsafe(32))
+    assert len(_crear_admin(monkeypatch, "desarrollo")) == 1
 
 
 def test_cors_de_localhost_solo_en_desarrollo():

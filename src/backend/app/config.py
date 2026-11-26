@@ -9,8 +9,6 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_ENV = Path(__file__).resolve().parents[3] / ".env"
-# Contraseña pública (está en el repositorio): solo sirve en desarrollo.
-CONTRASENA_ADMIN_DESARROLLO = "***REMOVED***"
 
 
 class Settings(BaseSettings):
@@ -21,8 +19,8 @@ class Settings(BaseSettings):
     jwt_secret: str = ""
     jwt_expires_min: int = 60
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
-    default_admin_email: str = "admin@example.invalid"
-    default_admin_password: str = CONTRASENA_ADMIN_DESARROLLO
+    default_admin_email: str = ""
+    default_admin_password: str = ""
 
     @property
     def es_produccion(self) -> bool:

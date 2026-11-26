@@ -124,9 +124,10 @@ CREATE DATABASE orbyte_test OWNER orbyte_dev;
    - `DATABASE_URL=postgresql://orbyte_dev:una-clave-de-desarrollo@localhost:5432/orbyte`
    - `TEST_DATABASE_URL`, igual pero terminando en `/orbyte_test`. Es opcional: sin ella se omiten las pruebas de integración. **Nunca debe apuntar a Render ni a una base con datos reales** (ver [Pruebas y calidad del backend](#pruebas-y-calidad-del-backend)).
    - `JWT_SECRET`, con el valor que imprima `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
+   - `DEFAULT_ADMIN_EMAIL` y `DEFAULT_ADMIN_PASSWORD`, con credenciales propias para el administrador inicial. Si alguna está vacía, el backend no crea esa cuenta.
 2. El archivo `.env` está en `.gitignore` y nunca se sube al repositorio.
 3. En producción las variables se configuran solo en los paneles de Render (backend, ver [Despliegue del backend](#despliegue-del-backend-en-render)) y Vercel (frontend: `VITE_API_URL`).
-4. Al arrancar el backend, si no existe, crea automáticamente un administrador inicial con el correo `admin@example.invalid` y la contraseña por defecto `***REMOVED***` para desarrollo. Con `ENTORNO=produccion` esa contraseña se rechaza y el administrador no se crea hasta definir un `DEFAULT_ADMIN_PASSWORD` propio.
+4. Al arrancar, el backend crea un administrador inicial solo si `DEFAULT_ADMIN_EMAIL` y `DEFAULT_ADMIN_PASSWORD` están configuradas y la cuenta aún no existe. Sin ambas variables, omite el alta. Usa credenciales propias en `.env` local y en el panel del servicio; no las guardes en el repositorio.
 
 ### Backend
 
@@ -187,7 +188,7 @@ Para crearlo: en el panel de Render, **New → Blueprint**, elige este repositor
 |---|---|
 | `CORS_ORIGINS` | Dominio de Vercel, con `https://` y sin `/` final. Se puede completar después de desplegar el frontend. |
 | `DEFAULT_ADMIN_EMAIL` | Correo de la administradora inicial. |
-| `DEFAULT_ADMIN_PASSWORD` | Contraseña propia y larga. Con `***REMOVED***` o vacía, la administradora no se crea. |
+| `DEFAULT_ADMIN_PASSWORD` | Contraseña propia y larga para la administradora inicial. Si está vacía, no se crea la cuenta inicial. |
 
 `JWT_SECRET` lo genera Render y `DATABASE_URL` sale de la base. Las migraciones corren al arrancar: si fallan, el despliegue falla. Para verificar, abre `https://<servicio>.onrender.com/health`, que debe responder `{"status":"ok"}`.
 

@@ -1,4 +1,5 @@
 import os
+import secrets
 import subprocess
 import sys
 from pathlib import Path
@@ -23,8 +24,10 @@ if os.getenv("TEST_DATABASE_URL"):
 
 # Las pruebas nunca usan la base de desarrollo: aunque el .env defina DATABASE_URL, aquí se
 # reemplaza siempre por la base de pruebas o por una dirección donde no hay ninguna base.
-os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5432/test"
-os.environ["JWT_SECRET"] = "test-secret-that-is-long-enough-for-tests"
+os.environ["DATABASE_URL"] = "postgresql://test@localhost:5432/test"
+os.environ["JWT_SECRET"] = secrets.token_urlsafe(48)
+os.environ["DEFAULT_ADMIN_EMAIL"] = "admin@example.com"
+os.environ["DEFAULT_ADMIN_PASSWORD"] = secrets.token_urlsafe(32)
 os.environ["JWT_EXPIRES_MIN"] = "60"
 if os.getenv("TEST_DATABASE_URL"):
     os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
